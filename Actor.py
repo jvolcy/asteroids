@@ -76,7 +76,7 @@ class Actor(object):
         else:
             self.__velocity = velocity
 
-    #heading property
+    #location property
     @property
     def location(self):
         return self.__location
@@ -84,7 +84,7 @@ class Actor(object):
     @location.setter
     def location(self, location):
         '''ensure that the location vector adheres to the selected border location behavior'''
-        self.__location = location.unit_vector()
+        self.__location = location
 
 
     def update_position(self, elapsed_ms):

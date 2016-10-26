@@ -30,7 +30,7 @@ else:
     joystick = pygame.joystick.Joystick(0)
     joystick.init()
 
-pygame.key.set_repeat(CONST.SCREEN_UPDATE_RATE, CONST.SCREEN_UPDATE_RATE)
+#pygame.key.set_repeat(CONST.SCREEN_UPDATE_RATE, CONST.SCREEN_UPDATE_RATE)
 
 #load and setup background image
 background_image = pygame.image.load("pix/background.bmp").convert()
@@ -48,15 +48,15 @@ spaceship.image.set_colorkey(CONST.BLACK)
 
 #Main program loop
 spaceship.location = Vect2(CONST.SCREEN_X_SIZE/2.0, CONST.SCREEN_Y_SIZE/2.0)
-spaceship.max_velocity = 0.3
+spaceship.max_velocity = 0.3    #pixels/ms
 
 elapsed_time = 0
 spaceship_angle = 0
 
+keyboard_dx = 0.0
+keyboard_dy = 0.0
 
 while not done:
-    dx = 0.0
-    dy = 0.0
 
     # --- Main event loop
     for event in pygame.event.get():
@@ -64,38 +64,57 @@ while not done:
             done = True
 
         if event.type == pygame.KEYDOWN:
-            print(event.key)
+            #print(event.key)
             if event.key == pygame.K_LEFT:
-                dx = -CONST.JOYSTICK_X_SCALE / 2
+                keyboard_dx = -CONST.JOYSTICK_X_SCALE / 2
             elif event.key == pygame.K_RIGHT:
-                dx = CONST.JOYSTICK_X_SCALE / 2
+                keyboard_dx = CONST.JOYSTICK_X_SCALE / 2
             elif event.key == pygame.K_UP:
-                dy = -CONST.JOYSTICK_Y_SCALE * 200
-                print(dy)
+                keyboard_dy = -CONST.JOYSTICK_Y_SCALE / 2
+                #print(dy)
             elif event.key == pygame.K_DOWN:
-                dy = CONST.JOYSTICK_Y_SCALE * 200
-                print(dy)
+                keyboard_dy = CONST.JOYSTICK_Y_SCALE / 2
+                #print(dy)
             elif event.key == pygame.K_q:
                 done = True
+            elif event.key == pygame.K_d:
+                print(spaceship, elapsed_time)
 
+        if event.type == pygame.KEYUP:
+            #print(event.key)
+            if event.key == pygame.K_LEFT:
+                keyboard_dx = 0.0
+            elif event.key == pygame.K_RIGHT:
+                keyboard_dx = 0.0
+            elif event.key == pygame.K_UP:
+                keyboard_dy = 0.0
+                #print(dy)
+            elif event.key == pygame.K_DOWN:
+                keyboard_dy = 0.0
+                #print(dy)
+
+    dx = keyboard_dx
+    dy = keyboard_dy
 
     # --- Game logic goes here
     if num_joysticks != 0:
-        dx = CONST.JOYSTICK_X_SCALE * joystick.get_axis(CONST.JOYSTICK_X_AXIS)
-        dy = CONST.JOYSTICK_Y_SCALE * joystick.get_axis(CONST.JOYSTICK_Y_AXIS)
+        dx += CONST.JOYSTICK_X_SCALE * joystick.get_axis(CONST.JOYSTICK_X_AXIS)
+        dy += CONST.JOYSTICK_Y_SCALE * joystick.get_axis(CONST.JOYSTICK_Y_AXIS)
 
     #only respond when the joystick is more than 10% of full scale
     if abs(dx) >= 0.1 * CONST.JOYSTICK_X_SCALE:
         spaceship_angle += dx
         spaceship.heading = Vect2(math.cos(-spaceship_angle), math.sin(spaceship_angle))
         #print(spaceship_angle*180/math.pi, spaceship.heading.angle()*180/math.pi)
-        print(spaceship)
+        #print(spaceship)
 
-    if abs(dy) >= 0.1 * CONST.JOYSTICK_Y_SCALE:
+    if abs(dy) >= 0.1 * (-CONST.JOYSTICK_Y_SCALE):
         spaceship.acceleration = spaceship.heading * dy
+#        print(spaceship.heading * 5)
+#        print(spaceship.heading * 0.000005)
+        #print(dy, -0.1*CONST.JOYSTICK_Y_SCALE, spaceship.heading * 5)
     else:
         spaceship.acceleration = Vect2(0, 0)
-
     
     spaceship.update_position(elapsed_time)
 

@@ -10,7 +10,8 @@ class Vect2(object):
         self.y = y
 
     def __str__(self):
-        return '[' + format(self.x, '0.4f') + 'i + ' + format(self.y, '0.4f') + 'j]'
+        return '[' + str(self.x) + 'i + ' + str(self.y) + 'j]'
+#        return '[' + format(self.x, '0.4f') + 'i + ' + format(self.y, '0.4f') + 'j]'
 
     def __add__(self, rhs_vector):
         return Vect2(self.x + rhs_vector.x, self.y + rhs_vector.y)
@@ -21,7 +22,7 @@ class Vect2(object):
     def __mul__(self, rhs_scalar):
         return Vect2(self.x * rhs_scalar, self.y * rhs_scalar)
 
-    def __div__(self, rhs_scalar):
+    def __truediv__(self, rhs_scalar):
         return Vect2(self.x / rhs_scalar, self.y / rhs_scalar)
 
     def magnitude(self):
