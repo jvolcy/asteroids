@@ -37,7 +37,7 @@ background_image = pygame.image.load("pix/background.bmp").convert()
 
 #create a spaceship object
 spaceship = Spaceship()
-spaceship.set_image("pix/spaceship.bmp", CONST.BLACK)
+spaceship.set_image("pix/spaceship_idle.bmp", CONST.BLACK)
 
 spaceship.border_policy[Spaceship.TOP_BORDER] = 'Wrap'
 spaceship.border_policy[Spaceship.RIGHT_BORDER] = 'Wrap'
@@ -63,9 +63,11 @@ spaceship_angle = 0
 
 keyboard_dx = 0.0
 keyboard_dy = 0.0
+old_dy = 0      #used to check when dy changes
+#free_running_counter = 0
 
 while not done:
-
+#    free_running_counter += 1
     # --- Main event loop
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
@@ -122,8 +124,21 @@ while not done:
 #        print(spaceship.heading * 0.000005)
         #print(dy, -0.1*CONST.JOYSTICK_Y_SCALE, spaceship.heading * 5)
     else:
+        dy = 0
         spaceship.acceleration = Vect2(0, 0)
-    
+        spaceship.velocity *= 0.99
+
+    #if the value of dy has changed, (i.e., the ship has accelerated) then change the spaceship image
+    if dy != old_dy:
+        if dy == 0:
+            #when idling, the ship has no fire behind it
+            spaceship.set_image("pix/spaceship_idle.bmp", CONST.BLACK)
+        else:
+            #when the ship is accelerating, there is fire behind it
+            spaceship.set_image("pix/spaceship.bmp", CONST.BLACK)
+    old_dy = dy
+
+
     spaceship.update_position(elapsed_time)
 
     # --- Drawing code goes here
