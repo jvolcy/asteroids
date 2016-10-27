@@ -3,13 +3,34 @@ base actor object
 '''
 from Vect2 import Vect2
 import math
-from CONST import CONST
+#from CONST import CONST
 import pygame
 
 class Actor(object):
 
+    BORDER_POLICY_NONE = 'None'
+    BORDER_POLICY_WRAP = 'Wrap'
+    BORDER_POLICY_CLIP = 'Clip'
 
-    def __init__(self, screen_width = 0, screen_height = 0):
+    TOP_BORDER = 0
+    RIGHT_BORDER = 1
+    LEFT_BORDER = 2
+    BOTTOM_BORDER = 3
+
+
+    def __init__(self):
+        #define the borders for the actor;  by default, this is the screen size
+        infoObject = pygame.display.Info()  #use display.Info to retrieve the size of the screen
+        pygame.display.set_mode((infoObject.current_w, infoObject.current_h))
+
+        self.set_borders(0, infoObject.current_w-1, 0, infoObject.current_h-1)
+        #border policy (choices are 'None', 'Clip' and 'Wrap'
+        self.border_policy = {}
+        self.border_policy[Actor.TOP_BORDER] = 'None'
+        self.border_policy[Actor.BOTTOM_BORDER] = 'None'
+        self.border_policy[Actor.LEFT_BORDER] = 'None'
+        self.border_policy[Actor.RIGHT_BORDER] = 'None'
+
         #maximum velocity (magnitude)
         self.max_velocity = 0       #no max
 
@@ -17,26 +38,16 @@ class Actor(object):
         self.velocity = Vect2(0, 0)     #units of pixels/ms
         self.acceleration = Vect2(0, 0)     #units of pixels/ms/ms
         #when we accelerate, the heading tells us in which direction
-        self.heading = Vect2(0, 0)
+        self.__heading = Vect2(1, 0)
 
         #where we want to end up
         self.destination = Vect2(0, 0)  #units of pixels
 
-        #the object's screen image
-        self.image = None
+        #the default image will be a black 10x10 surface with a black colorkey
+        self.__base_image = pygame.Surface((10, 10))
+        self.__update_image()
 
-        #border behaviors (choices are 'None', 'Clip' and 'Wrap'
-        self.border_behavior = {}
-        self.border_behavior["TOP_BORDER"] = "None"
-        self.border_behavior["BOTTOM_BORDER"] = "None"
-        self.border_behavior["LEFT_BORDER"] = "None"
-        self.border_behavior["RIGHT_BORDER"] = "None"
 
-        # self.border = {}
-        # self.border["TOP_BORDER"] = self.image.height/2
-        # self.border["BOTTOM_BORDER"] = screen_height-1 - self.image.height/2
-        # self.border["LEFT_BORDER"] = self.image.width/2
-        # self.border["RIGHT_BORDER"] = screen_width-1 - self.image.width/2
 
     def __str__(self):
         return 'loc=' + str(self.location)  \
@@ -46,10 +57,9 @@ class Actor(object):
 
 
     #image property
-    @property
-    def oriented_image(self):
-        imageAngleDeg = 180.0 * self.heading.angle() / math.pi
-        return pygame.transform.rotate(self.image, imageAngleDeg)
+#    @property
+#    def image(self):
+#        return self.__image
 
     #heading property
     @property
@@ -61,8 +71,11 @@ class Actor(object):
         '''ensure that the heading vector is always a unit vector'''
         self.__heading = heading.unit_vector()
 
+        #generate the rotated image.  Update the image whenever its heading changes
+        self.__update_image()
 
-   #velocity property
+
+    #velocity property
     @property
     def velocity(self):
         return self.__velocity
@@ -76,6 +89,7 @@ class Actor(object):
         else:
             self.__velocity = velocity
 
+
     #location property
     @property
     def location(self):
@@ -83,8 +97,45 @@ class Actor(object):
 
     @location.setter
     def location(self, location):
-        '''ensure that the location vector adheres to the selected border location behavior'''
+        '''location property used to enforce adherance to the selected border policy.'''
         self.__location = location
+
+        if self.__location.x > self.borders[Actor.RIGHT_BORDER]:
+            '''gone too far right'''
+            if self.border_policy[Actor.RIGHT_BORDER] == 'Wrap':
+                self.__location.x -= self.borders[Actor.RIGHT_BORDER] - self.borders[Actor.LEFT_BORDER]
+            elif self.border_policy[Actor.RIGHT_BORDER] == 'Clip':
+                self.__location.x = self.borders[Actor.RIGHT_BORDER]
+            else:   #assume policy is 'None'
+                return
+
+        if self.__location.x < self.borders[Actor.LEFT_BORDER]:
+            '''gone too far left'''
+            if self.border_policy[Actor.RIGHT_BORDER] == 'Wrap':
+                self.__location.x += self.borders[Actor.RIGHT_BORDER] - self.borders[Actor.LEFT_BORDER]
+            elif self.border_policy[Actor.RIGHT_BORDER] == 'Clip':
+                self.__location.x = self.borders[Actor.LEFT_BORDER]
+            else:   #assume policy is 'None'
+                return
+
+        if self.__location.y > self.borders[Actor.BOTTOM_BORDER]:
+            '''gone too far down'''
+            if self.border_policy[Actor.BOTTOM_BORDER] == 'Wrap':
+                self.__location.y -= self.borders[Actor.BOTTOM_BORDER] - self.borders[Actor.TOP_BORDER]
+            elif self.border_policy[Actor.BOTTOM_BORDER] == 'Clip':
+                self.__location.y = self.borders[Actor.BOTTOM_BORDER] - self.borders[Actor.TOP_BORDER]
+            else:   #assume policy is 'None'
+                return
+
+        if self.__location.y < self.borders[Actor.TOP_BORDER]:
+            '''gone too far up'''
+            if self.border_policy[Actor.TOP_BORDER] == 'Wrap':
+                self.__location.y += self.borders[Actor.BOTTOM_BORDER] - self.borders[Actor.TOP_BORDER]
+            elif self.border_policy[Actor.TOP_BORDER] == 'Clip':
+                self.__location.y = self.borders[Actor.TOP_BORDER]
+            else:   #assume policy is 'None'
+                return
+
 
 
     def update_position(self, elapsed_ms):
@@ -93,6 +144,45 @@ class Actor(object):
         self.velocity += self.acceleration * elapsed_ms
         self.location += self.velocity * elapsed_ms
 
+
+    def __update_image(self):
+        '''function that generates __image, the base_image's rotated version'''
+        imageAngleDeg = 180.0 * self.__heading.angle() / math.pi
+
+        self.__image = pygame.transform.rotate(self.__base_image, imageAngleDeg)
+
+        #preserve the object's center
+        self.__image_xcenter_offset = self.__image.get_rect().width/2
+        self.__image_ycenter_offset = self.__image.get_rect().height/2
+
+
+    def set_image(self, image, colorkey):
+        '''sets the object's base image given the image filename and colorkey'''
+        #the object's base screen image
+        self.__base_image = pygame.image.load(image).convert()
+        self.__base_image.set_colorkey(colorkey)
+
+        #update the object's rotated screen image
+        self.__update_image()
+
+
+    def get_image(self):
+        '''function that provides direct access to the actor's internal base image'''
+        return self.__base_image
+
+
+    def blit_to_screen(self, screen):
+        '''blit the actor to the provided screen'''
+        screen.blit(self.__image, [int(self.__location.x-self.__image_xcenter_offset), int(self.__location.y-self.__image_ycenter_offset)])
+
+
+    def set_borders(self, left, right, top, bottom):
+        '''function to limit the position of the actor on the screen'''
+        self.borders = {}
+        self.borders[Actor.LEFT_BORDER] = left
+        self.borders[Actor.RIGHT_BORDER] = right
+        self.borders[Actor.TOP_BORDER] = top
+        self.borders[Actor.BOTTOM_BORDER] = bottom
 
 
 if __name__ == "__main__":

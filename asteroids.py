@@ -37,14 +37,22 @@ background_image = pygame.image.load("pix/background.bmp").convert()
 
 #create a spaceship object
 spaceship = Spaceship()
-spaceship.image = pygame.image.load("pix/spaceship.bmp").convert()
+spaceship.set_image("pix/spaceship.bmp", CONST.BLACK)
+
+spaceship.border_policy[Spaceship.TOP_BORDER] = 'Wrap'
+spaceship.border_policy[Spaceship.RIGHT_BORDER] = 'Wrap'
+spaceship.border_policy[Spaceship.LEFT_BORDER] = 'Wrap'
+spaceship.border_policy[Spaceship.BOTTOM_BORDER] = 'Wrap'
+
+
+#spaceship.base_image = pygame.image.load("pix/actor_default.bmp").convert()
 
 threshold = 0.2
 
 #set a default spaceship image
 #spaceship = spaceship_image
 
-spaceship.image.set_colorkey(CONST.BLACK)
+#spaceship.base_image.set_colorkey(CONST.BLACK)
 
 #Main program loop
 spaceship.location = Vect2(CONST.SCREEN_X_SIZE/2.0, CONST.SCREEN_Y_SIZE/2.0)
@@ -124,8 +132,7 @@ while not done:
     screen.blit(background_image, [0, 0])
 
     #draw the spaceship
-    screen.blit(spaceship.oriented_image, [int(spaceship.location.x), int(spaceship.location.y)])
-    
+    spaceship.blit_to_screen(screen)
 
     # --- flip (update) the display
     pygame.display.flip()
