@@ -24,7 +24,7 @@ class CONST:
     RIGHT_JOYSTICK_Y_AXIS = 3
 
     JOYSTICK_X_AXIS = LEFT_JOYSTICK_X_AXIS
-    JOYSTICK_Y_AXIS = LEFT_JOYSTICK_Y_AXIS
+    JOYSTICK_Y_AXIS = RIGHT_JOYSTICK_Y_AXIS
 
     JOYSTICK_X_SCALE = 0.1     #controls spaceship angle in radians
     JOYSTICK_Y_SCALE = -0.0001     #controls spaceship Y acceleration

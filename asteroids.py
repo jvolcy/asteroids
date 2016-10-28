@@ -8,9 +8,15 @@ from Spaceship import Spaceship
 from Vect2 import Vect2
 from Phaser import Phaser
 
+SOUND_SHIP_IDLE_VOLUME = 0.5
+SOUND_SHIP_VOLUME = 1.0
 
 #initialize the pygame library
 pygame.init()
+
+#initialize sound mixer
+pygame.mixer.init(frequency=22050, size=-16, channels=2, buffer=4096)
+
 done = False
 
 screen = pygame.display.set_mode((CONST.SCREEN_X_SIZE, CONST.SCREEN_Y_SIZE))
@@ -46,7 +52,12 @@ spaceship.border_policy[Spaceship.LEFT_BORDER] = 'Wrap'
 spaceship.border_policy[Spaceship.BOTTOM_BORDER] = 'Wrap'
 
 
-#spaceship.base_image = pygame.image.load("pix/actor_default.bmp").convert()
+#setup sound files
+spaceship_sound = pygame.mixer.Sound('sound/ship_idle.ogg')
+spaceship_sound_channel = spaceship_sound.play(loops=-1, maxtime=0, fade_ms=0)
+spaceship_sound_channel.set_volume(SOUND_SHIP_IDLE_VOLUME)
+
+phaser_sound = pygame.mixer.Sound('sound/laser.ogg')
 
 threshold = 0.2
 
@@ -93,9 +104,8 @@ while not done:
             elif event.key == pygame.K_d:
                 print(spaceship, elapsed_time, len(phasers))
             elif event.key == pygame.K_SPACE:
-                #print('shoot!')
+                phaser_sound.play()
                 phasers.append(Phaser(spaceship.location, spaceship.heading * CONST.PHASER_SPEED, CONST.PHASER_DISTANCE))
-                #print(phasers[0])
 
         if event.type == pygame.KEYUP:
             #print(event.key)
@@ -114,6 +124,11 @@ while not done:
     dy = keyboard_dy
 
     # --- Game logic goes here
+
+    if joystick.get_button(5):
+        phaser_sound.play()
+        phasers.append(Phaser(spaceship.location, spaceship.heading * CONST.PHASER_SPEED, CONST.PHASER_DISTANCE))
+
     if num_joysticks != 0:
         dx += CONST.JOYSTICK_X_SCALE * joystick.get_axis(CONST.JOYSTICK_X_AXIS)
         dy += CONST.JOYSTICK_Y_SCALE * joystick.get_axis(CONST.JOYSTICK_Y_AXIS)
@@ -122,14 +137,9 @@ while not done:
     if abs(dx) >= 0.1 * CONST.JOYSTICK_X_SCALE:
         spaceship_angle += dx
         spaceship.heading = Vect2(math.cos(-spaceship_angle), math.sin(spaceship_angle))
-        #print(spaceship_angle*180/math.pi, spaceship.heading.angle()*180/math.pi)
-        #print(spaceship)
 
     if abs(dy) >= 0.1 * (-CONST.JOYSTICK_Y_SCALE):
         spaceship.acceleration = spaceship.heading * dy
-#        print(spaceship.heading * 5)
-#        print(spaceship.heading * 0.000005)
-        #print(dy, -0.1*CONST.JOYSTICK_Y_SCALE, spaceship.heading * 5)
     else:
         dy = 0
         spaceship.acceleration = Vect2(0, 0)
@@ -140,14 +150,15 @@ while not done:
         if dy == 0:
             #when idling, the ship has no fire behind it
             spaceship.set_image("pix/spaceship_idle.bmp", CONST.BLACK)
+            spaceship_sound_channel.set_volume(SOUND_SHIP_IDLE_VOLUME)
         else:
             #when the ship is accelerating, there is fire behind it
             spaceship.set_image("pix/spaceship.bmp", CONST.BLACK)
+            spaceship_sound_channel.set_volume(SOUND_SHIP_VOLUME)
+
     old_dy = dy
 
-
     spaceship.update_position(elapsed_time)
-
 
     # --- Drawing code goes here
 
@@ -174,8 +185,12 @@ while not done:
     elapsed_time = clock.tick(CONST.SCREEN_UPDATE_RATE)
 
 
+spaceship_sound.fadeout(2000)
+
 if num_joysticks != 0:
     joystick.quit()
+
+pygame.mixer.quit()
 
 #close the window and quit
 pygame.quit()
