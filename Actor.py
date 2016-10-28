@@ -40,13 +40,9 @@ class Actor(object):
         #when we accelerate, the heading tells us in which direction
         self.__heading = Vect2(1, 0)
 
-        #where we want to end up
-        self.destination = Vect2(0, 0)  #units of pixels
-
         #the default image will be a black 10x10 surface with a black colorkey
         self.__base_image = pygame.Surface((10, 10))
         self.__update_image()
-
 
 
     def __str__(self):

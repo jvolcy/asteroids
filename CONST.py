@@ -28,3 +28,6 @@ class CONST:
 
     JOYSTICK_X_SCALE = 0.1     #controls spaceship angle in radians
     JOYSTICK_Y_SCALE = -0.0001     #controls spaceship Y acceleration
+
+    PHASER_SPEED = .3
+    PHASER_DISTANCE = 200

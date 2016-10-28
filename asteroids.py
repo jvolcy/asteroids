@@ -6,6 +6,7 @@ import math
 from CONST import CONST #game constants
 from Spaceship import Spaceship
 from Vect2 import Vect2
+from Phaser import Phaser
 
 
 #initialize the pygame library
@@ -66,6 +67,8 @@ keyboard_dy = 0.0
 old_dy = 0      #used to check when dy changes
 #free_running_counter = 0
 
+phasers = []
+
 while not done:
 #    free_running_counter += 1
     # --- Main event loop
@@ -88,7 +91,11 @@ while not done:
             elif event.key == pygame.K_q:
                 done = True
             elif event.key == pygame.K_d:
-                print(spaceship, elapsed_time)
+                print(spaceship, elapsed_time, len(phasers))
+            elif event.key == pygame.K_SPACE:
+                #print('shoot!')
+                phasers.append(Phaser(spaceship.location, spaceship.heading * CONST.PHASER_SPEED, CONST.PHASER_DISTANCE))
+                #print(phasers[0])
 
         if event.type == pygame.KEYUP:
             #print(event.key)
@@ -141,10 +148,21 @@ while not done:
 
     spaceship.update_position(elapsed_time)
 
+
     # --- Drawing code goes here
 
     #First, draw the background.  Place all other drawing code AFTER this command.
     screen.blit(background_image, [0, 0])
+
+
+    for phaser in phasers:
+        phaser.update_position(elapsed_time)
+        #draw the phaser
+        phaser.blit_to_screen(screen)
+
+        if phaser.end_of_life == True:
+            phasers.remove(phaser)
+
 
     #draw the spaceship
     spaceship.blit_to_screen(screen)

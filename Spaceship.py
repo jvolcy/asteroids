@@ -4,7 +4,7 @@ Spaceship class
 
 from Actor import Actor
 #import math
-from CONST import CONST
+#from CONST import CONST
 #import pygame
 from Vect2 import Vect2
 
