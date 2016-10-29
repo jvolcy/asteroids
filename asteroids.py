@@ -7,9 +7,26 @@ from CONST import CONST #game constants
 from Spaceship import Spaceship
 from Vect2 import Vect2
 from Phaser import Phaser
+from Boulder import Boulder
+import os
+import random
 
 SOUND_SHIP_IDLE_VOLUME = 0.5
 SOUND_SHIP_VOLUME = 1.0
+
+
+def findFilesInDir(directory, extension):
+    '''function that searches the specified 'directory' for files
+    with the supplied extention.  The function returns a list of these files.'''
+    foundFiles = []
+    filenames = os.listdir(directory)
+    for filename in filenames:
+        if filename[-len(extension):] == extension:
+            foundFiles.append(directory + '/' + filename)
+            #print ('===>' + filename)
+    return foundFiles
+
+
 
 #initialize the pygame library
 pygame.init()
@@ -78,7 +95,16 @@ keyboard_dy = 0.0
 old_dy = 0      #used to check when dy changes
 #free_running_counter = 0
 
+#find every image file in the boulders folder
+boulder_files = findFilesInDir('pix/asteroids', '.bmp')
+#for f in boulder_files:
+#    print(f)
+
+#list of phasers
 phasers = []
+
+#list of boulders
+boulders = []
 
 while not done:
 #    free_running_counter += 1
@@ -106,6 +132,18 @@ while not done:
             elif event.key == pygame.K_SPACE:
                 phaser_sound.play()
                 phasers.append(Phaser(spaceship.location, spaceship.heading * CONST.PHASER_SPEED, CONST.PHASER_DISTANCE))
+            elif event.key == pygame.K_b:
+                #location, velocity, angular_velocity_dps, image
+                boulder_filename = boulder_files[random.randint(0, len(boulder_files)-1)]
+                new_boulder = Boulder( Vect2(320, 240), Vect2(0.2*random.random() - 0.1, 0.2*random.random() - 0.1), 60.0 * random.random() - 30, boulder_filename)
+                #new_boulder = Boulder( Vect2(320, 240), Vect2(0.2, 0.1), 20.0, "pix/asteroids/boulder1_120.bmp" )
+                new_boulder.border_policy[Spaceship.TOP_BORDER] = 'Wrap'
+                new_boulder.border_policy[Spaceship.RIGHT_BORDER] = 'Wrap'
+                new_boulder.border_policy[Spaceship.LEFT_BORDER] = 'Wrap'
+                new_boulder.border_policy[Spaceship.BOTTOM_BORDER] = 'Wrap'
+
+                boulders.append(new_boulder)
+                print("#boulders = ", len(boulders))
 
         if event.type == pygame.KEYUP:
             #print(event.key)
@@ -125,13 +163,13 @@ while not done:
 
     # --- Game logic goes here
 
-    if joystick.get_button(5):
-        phaser_sound.play()
-        phasers.append(Phaser(spaceship.location, spaceship.heading * CONST.PHASER_SPEED, CONST.PHASER_DISTANCE))
 
     if num_joysticks != 0:
         dx += CONST.JOYSTICK_X_SCALE * joystick.get_axis(CONST.JOYSTICK_X_AXIS)
         dy += CONST.JOYSTICK_Y_SCALE * joystick.get_axis(CONST.JOYSTICK_Y_AXIS)
+        if joystick.get_button(5):
+            phaser_sound.play()
+            phasers.append(Phaser(spaceship.location, spaceship.heading * CONST.PHASER_SPEED, CONST.PHASER_DISTANCE))
 
     #only respond when the joystick is more than 10% of full scale
     if abs(dx) >= 0.1 * CONST.JOYSTICK_X_SCALE:
@@ -174,6 +212,10 @@ while not done:
         if phaser.end_of_life == True:
             phasers.remove(phaser)
 
+
+    for boulder in boulders:
+        boulder.update_position(elapsed_time)
+        boulder.blit_to_screen(screen)
 
     #draw the spaceship
     spaceship.blit_to_screen(screen)

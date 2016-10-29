@@ -1,5 +1,5 @@
 '''
-Spaceship class
+Phaser class
 '''
 
 from Actor import Actor
