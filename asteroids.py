@@ -11,9 +11,6 @@ from Boulder import Boulder
 import os
 import random
 
-SOUND_SHIP_IDLE_VOLUME = 0.5
-SOUND_SHIP_VOLUME = 1.0
-
 
 def findFilesInDir(directory, extension):
     '''function that searches the specified 'directory' for files
@@ -59,8 +56,25 @@ else:
 #load and setup background image
 background_image = pygame.image.load("pix/background.bmp").convert()
 
+
+
+#setup sprite lists
+
+#list of all actors
+actors = pygame.sprite.Group()
+
+#list of phasers
+phasers = pygame.sprite.Group()
+
+#list of boulders
+boulders = pygame.sprite.Group()
+
+
+
 #create a spaceship object
 spaceship = Spaceship()
+#add to the actors sprite list
+actors.add(spaceship)
 spaceship.set_image("pix/spaceship_idle.bmp", CONST.BLACK)
 
 spaceship.border_policy[Spaceship.TOP_BORDER] = 'Wrap'
@@ -72,18 +86,16 @@ spaceship.border_policy[Spaceship.BOTTOM_BORDER] = 'Wrap'
 #setup sound files
 spaceship_sound = pygame.mixer.Sound('sound/ship_idle.ogg')
 spaceship_sound_channel = spaceship_sound.play(loops=-1, maxtime=0, fade_ms=0)
-spaceship_sound_channel.set_volume(SOUND_SHIP_IDLE_VOLUME)
+spaceship_sound_channel.set_volume(CONST.SOUND_SHIP_IDLE_VOLUME)
 
 phaser_sound = pygame.mixer.Sound('sound/laser.ogg')
 
 threshold = 0.2
 
-#set a default spaceship image
-#spaceship = spaceship_image
 
-#spaceship.base_image.set_colorkey(CONST.BLACK)
 
-#Main program loop
+
+
 spaceship.location = Vect2(CONST.SCREEN_X_SIZE/2.0, CONST.SCREEN_Y_SIZE/2.0)
 spaceship.max_velocity = 0.3    #pixels/ms
 
@@ -100,12 +112,9 @@ boulder_files = findFilesInDir('pix/asteroids', '.bmp')
 #for f in boulder_files:
 #    print(f)
 
-#list of phasers
-phasers = []
 
-#list of boulders
-boulders = []
 
+#Main program loop
 while not done:
 #    free_running_counter += 1
     # --- Main event loop
@@ -131,7 +140,9 @@ while not done:
                 print(spaceship, elapsed_time, len(phasers))
             elif event.key == pygame.K_SPACE:
                 phaser_sound.play()
-                phasers.append(Phaser(spaceship.location, spaceship.heading * CONST.PHASER_SPEED, CONST.PHASER_DISTANCE))
+                new_phaser = Phaser(spaceship.location, spaceship.heading * CONST.PHASER_SPEED, CONST.PHASER_DISTANCE)
+                phasers.add(new_phaser)
+                actors.add(new_phaser)
             elif event.key == pygame.K_b:
                 #location, velocity, angular_velocity_dps, image
                 boulder_filename = boulder_files[random.randint(0, len(boulder_files)-1)]
@@ -142,7 +153,8 @@ while not done:
                 new_boulder.border_policy[Spaceship.LEFT_BORDER] = 'Wrap'
                 new_boulder.border_policy[Spaceship.BOTTOM_BORDER] = 'Wrap'
 
-                boulders.append(new_boulder)
+                boulders.add(new_boulder)
+                actors.add(new_boulder)
                 print("#boulders = ", len(boulders))
 
         if event.type == pygame.KEYUP:
@@ -169,7 +181,7 @@ while not done:
         dy += CONST.JOYSTICK_Y_SCALE * joystick.get_axis(CONST.JOYSTICK_Y_AXIS)
         if joystick.get_button(5):
             phaser_sound.play()
-            phasers.append(Phaser(spaceship.location, spaceship.heading * CONST.PHASER_SPEED, CONST.PHASER_DISTANCE))
+            phasers.add(Phaser(spaceship.location, spaceship.heading * CONST.PHASER_SPEED, CONST.PHASER_DISTANCE))
 
     #only respond when the joystick is more than 10% of full scale
     if abs(dx) >= 0.1 * CONST.JOYSTICK_X_SCALE:
@@ -188,11 +200,11 @@ while not done:
         if dy == 0:
             #when idling, the ship has no fire behind it
             spaceship.set_image("pix/spaceship_idle.bmp", CONST.BLACK)
-            spaceship_sound_channel.set_volume(SOUND_SHIP_IDLE_VOLUME)
+            spaceship_sound_channel.set_volume(CONST.SOUND_SHIP_IDLE_VOLUME)
         else:
             #when the ship is accelerating, there is fire behind it
             spaceship.set_image("pix/spaceship.bmp", CONST.BLACK)
-            spaceship_sound_channel.set_volume(SOUND_SHIP_VOLUME)
+            spaceship_sound_channel.set_volume(CONST.SOUND_SHIP_VOLUME)
 
     old_dy = dy
 
@@ -207,7 +219,7 @@ while not done:
     for phaser in phasers:
         phaser.update_position(elapsed_time)
         #draw the phaser
-        phaser.blit_to_screen(screen)
+        #phaser.blit_to_screen(screen)
 
         if phaser.end_of_life == True:
             phasers.remove(phaser)
@@ -215,10 +227,13 @@ while not done:
 
     for boulder in boulders:
         boulder.update_position(elapsed_time)
-        boulder.blit_to_screen(screen)
+        #boulder.blit_to_screen(screen)
 
     #draw the spaceship
-    spaceship.blit_to_screen(screen)
+    #spaceship.blit_to_screen(screen)
+
+    #draw all sprites
+    actors.draw(screen)
 
     # --- flip (update) the display
     pygame.display.flip()

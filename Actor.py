@@ -6,7 +6,7 @@ import math
 #from CONST import CONST
 import pygame
 
-class Actor(object):
+class Actor(pygame.sprite.Sprite):
 
     BORDER_POLICY_NONE = 'None'
     BORDER_POLICY_WRAP = 'Wrap'
@@ -19,6 +19,10 @@ class Actor(object):
 
 
     def __init__(self):
+
+        super().__init__()  #call base class (Sprite)  __init__()
+
+
         #define the borders for the actor;  by default, this is the screen size
         infoObject = pygame.display.Info()  #use display.Info to retrieve the size of the screen
         pygame.display.set_mode((infoObject.current_w, infoObject.current_h))
@@ -31,18 +35,19 @@ class Actor(object):
         self.border_policy[Actor.LEFT_BORDER] = 'None'
         self.border_policy[Actor.RIGHT_BORDER] = 'None'
 
-        #maximum velocity (magnitude)
-        self.max_velocity = 0       #no max
-
-        self.location = Vect2(0, 0)     #units of pixels
-        self.velocity = Vect2(0, 0)     #units of pixels/ms
-        self.acceleration = Vect2(0, 0)     #units of pixels/ms/ms
         #when we accelerate, the heading tells us in which direction
         self.__heading = Vect2(1, 0)
 
         #the default image will be a black 10x10 surface with a black colorkey
         self.__base_image = pygame.Surface((10, 10))
         self.__update_image()
+
+        #maximum velocity (magnitude)
+        self.max_velocity = 0       #no max
+
+        self.location = Vect2(0, 0)     #units of pixels
+        self.velocity = Vect2(0, 0)     #units of pixels/ms
+        self.acceleration = Vect2(0, 0)     #units of pixels/ms/ms
 
 
     def __str__(self):
@@ -51,11 +56,6 @@ class Actor(object):
         + '; accel=' + str(self.acceleration) \
         + '; heading=' + str(self.heading) \
 
-
-    #image property
-#    @property
-#    def image(self):
-#        return self.__image
 
     #heading property
     @property
@@ -103,7 +103,7 @@ class Actor(object):
             elif self.border_policy[Actor.RIGHT_BORDER] == 'Clip':
                 self.__location.x = self.borders[Actor.RIGHT_BORDER]
             else:   #assume policy is 'None'
-                return
+                pass
 
         if self.__location.x < self.borders[Actor.LEFT_BORDER]:
             '''gone too far left'''
@@ -112,7 +112,7 @@ class Actor(object):
             elif self.border_policy[Actor.RIGHT_BORDER] == 'Clip':
                 self.__location.x = self.borders[Actor.LEFT_BORDER]
             else:   #assume policy is 'None'
-                return
+                pass
 
         if self.__location.y > self.borders[Actor.BOTTOM_BORDER]:
             '''gone too far down'''
@@ -121,7 +121,7 @@ class Actor(object):
             elif self.border_policy[Actor.BOTTOM_BORDER] == 'Clip':
                 self.__location.y = self.borders[Actor.BOTTOM_BORDER] - self.borders[Actor.TOP_BORDER]
             else:   #assume policy is 'None'
-                return
+                pass
 
         if self.__location.y < self.borders[Actor.TOP_BORDER]:
             '''gone too far up'''
@@ -130,8 +130,11 @@ class Actor(object):
             elif self.border_policy[Actor.TOP_BORDER] == 'Clip':
                 self.__location.y = self.borders[Actor.TOP_BORDER]
             else:   #assume policy is 'None'
-                return
+                pass
 
+        #calcuate the location of the image and store it in the inherited Sprite.rect Rect member
+        self.rect.x = self.__location.x - self.__image_xcenter_offset
+        self.rect.y = self.__location.y - self.__image_ycenter_offset
 
 
     def update_position(self, elapsed_ms):
@@ -145,11 +148,16 @@ class Actor(object):
         '''function that generates __image, the base_image's rotated version'''
         imageAngleDeg = 180.0 * self.__heading.angle() / math.pi
 
-        self.__image = pygame.transform.rotate(self.__base_image, imageAngleDeg)
+        self.image = pygame.transform.rotate(self.__base_image, imageAngleDeg)
 
-        #preserve the object's center
-        self.__image_xcenter_offset = self.__image.get_rect().width/2
-        self.__image_ycenter_offset = self.__image.get_rect().height/2
+        #put the image's height and width in the inherited Sprite.rect Rect member
+        #self.rect.width = self.__image.get_rect().width
+        #self.rect.height = self.__image.get_rect().height
+        self.rect = self.image.get_rect()
+
+        #calculate the object's center offset
+        self.__image_xcenter_offset = self.rect.width/2
+        self.__image_ycenter_offset = self.rect.height/2
 
 
     def set_image(self, image, colorkey):
@@ -165,11 +173,6 @@ class Actor(object):
     def get_image(self):
         '''function that provides direct access to the actor's internal base image'''
         return self.__base_image
-
-
-    def blit_to_screen(self, screen):
-        '''blit the actor to the provided screen'''
-        screen.blit(self.__image, [int(self.__location.x-self.__image_xcenter_offset), int(self.__location.y-self.__image_ycenter_offset)])
 
 
     def set_borders(self, left, right, top, bottom):
