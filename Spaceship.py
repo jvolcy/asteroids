@@ -11,7 +11,7 @@ from Vect2 import Vect2
 class Spaceship(Actor):
     def __init__(self):
         #since we've overridden the base class's __init__ function, we must call it explicitly
-        super(Spaceship, self).__init__()
+        super().__init__()
 
 
     def __str__(self):

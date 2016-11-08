@@ -11,7 +11,7 @@ from Vect2 import Vect2
 class Boulder(Actor):
     def __init__(self, location, velocity, angular_velocity_dps, image):
         #since we've overridden the base class's __init__ function, we must call it explicitly
-        super(Boulder, self).__init__()
+        super().__init__()
         self.location = location
         self.velocity = velocity    #in pixels/ms
         #angular velocity provided in degrees/sec (dps)

@@ -11,7 +11,7 @@ from Vect2 import Vect2
 class Phaser(Actor):
     def __init__(self, location, velocity, life_distance):
         #since we've overridden the base class's __init__ function, we must call it explicitly
-        super(Phaser, self).__init__()
+        super().__init__()
         self.location = location
         self.velocity = velocity    #in pixels/ms
         self.__time_ms = 0      #how long we've been alive
