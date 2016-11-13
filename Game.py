@@ -107,6 +107,7 @@ class Game(object):
         #for f in boulder_files:
         #    print(f)
 
+        self.old_collision_status = False
 
     def run(self, elapsed_time):
         done = False
@@ -168,6 +169,17 @@ class Game(object):
 
         # --- Game logic goes here
 
+        # --- Collision detection with asteroids
+        # See if the spaceship has collided with any of the asteroids
+        blocks_hit_list = pygame.sprite.spritecollide(sprite=self.spaceship, group=self.boulders, dokill=False, collided=pygame.sprite.collide_mask)
+        #dokill=False means do not remove colliding boulder from the boulder list
+
+        # Check the list of collisions.
+        if blocks_hit_list == []:
+            collision = False
+        else:
+            collision = True
+
 
         if self.num_joysticks != 0:
             dx += CONST.JOYSTICK_X_SCALE * self.joystick.get_axis(CONST.JOYSTICK_X_AXIS)
@@ -189,19 +201,28 @@ class Game(object):
             self.spaceship.velocity *= 0.99
 
         #if the value of dy has changed, (i.e., the ship has accelerated) then change the spaceship image
-        if dy != self.old_dy:
+        if dy != self.old_dy or collision != self.old_collision_status:
             if dy == 0:
                 #when idling, the ship has no fire behind it
-                self.spaceship.set_image("pix/spaceship_idle.bmp", CONST.BLACK)
+                if collision == True:
+                    self.spaceship.set_image("pix/hit_spaceship_idle.bmp", CONST.BLACK)
+                else:
+                    self.spaceship.set_image("pix/spaceship_idle.bmp", CONST.BLACK)
                 self.spaceship_sound_channel.set_volume(CONST.SOUND_SHIP_IDLE_VOLUME)
             else:
                 #when the ship is accelerating, there is fire behind it
-                self.spaceship.set_image("pix/spaceship.bmp", CONST.BLACK)
+                if collision == True:
+                    self.spaceship.set_image("pix/hit_spaceship_idle.bmp", CONST.BLACK)
+                else:
+                    self.spaceship.set_image("pix/spaceship.bmp", CONST.BLACK)
                 self.spaceship_sound_channel.set_volume(CONST.SOUND_SHIP_VOLUME)
 
         self.old_dy = dy
+        self.old_collision_status = collision
 
         self.spaceship.update_position(elapsed_time)
+
+
 
         # --- Drawing code goes here
 

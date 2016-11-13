@@ -154,6 +154,7 @@ class Actor(pygame.sprite.Sprite):
         #self.rect.width = self.__image.get_rect().width
         #self.rect.height = self.__image.get_rect().height
         self.rect = self.image.get_rect()
+        self.mask = pygame.mask.from_surface(self.image)    #create a bit mask for use in collision detection
 
         #calculate the object's center offset
         self.__image_xcenter_offset = self.rect.width/2
